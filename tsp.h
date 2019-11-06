@@ -4,7 +4,9 @@ Description: TSP class specification file for our Christofides implementation
 Authors: Sean Hinds, Ryan Hong, Jeff Herlitz
 Date: 08/16/17
 *************************************************************************/
-
+#ifndef TSP_H
+#define TSP_H
+//---------------------------------------------------------------------------
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -19,94 +21,80 @@ Date: 08/16/17
 #include <stdio.h>
 #include <vector>
 #include <limits>
+//---------------------------------------------------------------------------
+//1=int, 2=float, 3=double, 4=long double
+#define NUM_TYPE 3
 
-using namespace std;
-
-#ifndef TSP_H
-#define TSP_H
-
-class TSP
-{
-private:
-
-	struct City{
-		int x;
-		int y;
-	};
-
-	string iFile;
-	string oFile;
-
-	// List of odd nodes
-	vector<int>odds;
-
-	//Smaller cost matrix to find minimum matching on odd nodes
-	int **cost;
-
-	//Adjacency list
-	vector<int> *adjList;
-
-	void findOdds();
-
-
-
-protected:
-
-
-public:
-	// Number of cities
-	int n;
-
-	//path
-	int **path_vals;
-
-	//Shortest path length
-	int pathLength;
-
-	//euler circuit
-	vector<int> circuit;
-
-	vector<City> cities;
-
-	// n x n, pairwise distances between cities
-	int **graph;
-
-  vector<int>* adjlist;
-
-	// Constructor
-	TSP(string in, string out);
-
-	// Destructor
-	~TSP();
-
-	int get_distance(struct City c1, struct City c2);
-
-	//Find perfect matching
-	void perfectMatching();
-
-	//Find Euler tour
-	void euler_tour(int start, vector<int> &path);
-
-	//Find Hamiltonian path
-	void make_hamiltonian(vector<int> &path, int &pathCost);
-
-	// Prim's algorithm
-	void findMST();
-
-	int getMinIndex(int key[], bool mst[]);
-
-	void printResult();
-	void printPath();
-	void printEuler();
-	void printAdjList();
-	void printCities();
-
-	int get_size(){return n;};
-
-	void fillMatrix();
-
-	int findBestPath(int start);
-
-};
-
+#if NUM_TYPE==1
+#define TSPN_NUM_TYPE int
+#elif NUM_TYPE==2
+#define TSPN_NUM_TYPE float
+#elif NUM_TYPE==3
+#define TSPN_NUM_TYPE double
+#elif NUM_TYPE==4
+#define TSPN_NUM_TYPE long double
 #endif
+//---------------------------------------------------------------------------
+struct TSPN_Point{
+    TSPN_NUM_TYPE x;
+    TSPN_NUM_TYPE y;
+};
+//---------------------------------------------------------------------------
+class TSPN
+{
+ protected:
+  // List of odd nodes
+  std::vector<int> odds;
+
+  //Adjacency list
+  std::vector<int>* adjlist;
+
+  // Number of points
+  int n;
+
+  //Shortest path length
+  TSPN_NUM_TYPE pathLength;
+
+  //euler circuit
+  std::vector<int> circuit;
+
+  // n x n, pairwise distances between points
+  TSPN_NUM_TYPE **graph;
+
+  // Point list
+  std::vector<TSPN_Point> points;
+
+  // -
+  void findOdds();
+
+  //Find perfect matching
+  void perfectMatching();
+
+  //Find Euler tour
+  void euler_tour(int start, std::vector<int> &path);
+  
+  //Find Hamiltonian path
+  void make_hamiltonian(std::vector<int> &path, TSPN_NUM_TYPE &pathCost);
+
+  TSPN_NUM_TYPE get_distance(struct TSPN_Point c1, struct TSPN_Point c2);
+  void findMST();
+  int getMinIndex(TSPN_NUM_TYPE key[], bool mst[]);
+  void fillMatrix();
+  TSPN_NUM_TYPE findBestPath(int start);
+
+ public:
+
+  TSPN(std::vector<TSPN_Point> aPointList);
+  ~TSPN();
+
+  void Solve();
+
+  void printResult();
+  void printPath();
+  void printAdjList();
+
+  std::vector<int> getResult();
+};
+//---------------------------------------------------------------------------
+#endif
+//---------------------------------------------------------------------------
