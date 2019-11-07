@@ -31,6 +31,7 @@ template <typename T> class TSP
   struct TSP_Point{
     T x;
     T y;
+    T z;
   };
 
  protected:

@@ -7,9 +7,10 @@ Date: 08/16/17
 Modified & enhanced by Fotios Sioutis "sfotis@gmail.com"
 Date: 06/11/19
 *************************************************************************/
-#include "tsp.h"
+#include "TSAlgo_tsp.h"
 //---------------------------------------------------------------------------
 #ifdef MAKE_TSP_EXE
+typedef double TSP_TYPE;
 int main(int argc, char *argv[]) {
   // Read file names from input
   std::string input = "tsp_example_1.txt";
@@ -25,11 +26,11 @@ int main(int argc, char *argv[]) {
 
   //READ DATA
   int c;
-  TSP_TYPE x, y;
+  TSP_TYPE x, y, z = 0.;
   std::vector<TSP<TSP_TYPE>::TSP_Point> points;
   while(!inStream.eof()) {
     inStream >> c >> x >> y;
-    TSP<TSP_TYPE>::TSP_Point newPoint = {x, y};
+    TSP<TSP_TYPE>::TSP_Point newPoint = {x, y, z};
     points.push_back(newPoint);
   }
   inStream.close();
@@ -111,16 +112,18 @@ template <> int TSP<int>::get_distance(struct TSP_Point c1, struct TSP_Point c2)
 {
   double dx = std::pow((double) (c1.x - c2.x), 2);
   double dy = std::pow((double) (c1.y - c2.y), 2);
+  double dz = std::pow((double) (c1.z - c2.z), 2);
 
-  return std::floor( std::sqrt(dx + dy) + 0.5);
+  return std::floor( std::sqrt(dx + dy + dz) + 0.5);
 }
 //---------------------------------------------------------------------------
 template <typename T> T TSP<T>::get_distance(struct TSP_Point c1, struct TSP_Point c2)
 {
   T dx = std::pow(c1.x - c2.x, 2);
   T dy = std::pow(c1.y - c2.y, 2);
+  T dz = std::pow(c1.z - c2.z, 2);
 
-  return std::sqrt(dx + dy);
+  return std::sqrt(dx + dy + dz);
 }
 //---------------------------------------------------------------------------
 template <typename T> void TSP<T>::fillMatrix()
@@ -175,10 +178,8 @@ template <typename T> void TSP<T>::findMST()
 
           // update key
           key[j] = graph[k][j];
-
       }
     }
-
   }
 
   delete [] key;
