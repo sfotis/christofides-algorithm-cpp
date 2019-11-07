@@ -25,19 +25,18 @@ int main(int argc, char *argv[]) {
 
   //READ DATA
   int c;
-  TSP_NUM_TYPE x, y;
-  std::vector<TSP_Point> points;
-
+  TSP_TYPE x, y;
+  std::vector<TSP<TSP_TYPE>::TSP_Point> points;
   while(!inStream.eof()) {
     inStream >> c >> x >> y;
-    TSP_Point newPoint = {x, y};
+    TSP<TSP_TYPE>::TSP_Point newPoint = {x, y};
     points.push_back(newPoint);
   }
   inStream.close();
 
 
   // Create new tsp object
-  TSP tsp(points);
+  TSP<TSP_TYPE> tsp(points);
   tsp.Solve();
   std::cout << std::endl << "R E S U L T"  << std::endl;
   tsp.printResult();
@@ -53,13 +52,13 @@ int main(int argc, char *argv[]) {
 #endif
 //---------------------------------------------------------------------------
 //Constructor
-TSP::TSP(std::vector<TSP_Point> aPointList) : points(aPointList)
+template <typename T> TSP<T>::TSP (std::vector<TSP_Point> aPointList) : points(aPointList)
 {
   n = points.size();
 
-  graph = new TSP_NUM_TYPE*[n];
+  graph = new T*[n];
   for(int i = 0; i < n; i++){
-    graph[i] = new TSP_NUM_TYPE[n];
+    graph[i] = new T[n];
     for(int j = 0; j < n; j++){
       graph[i][j] = 0.;
     }
@@ -69,7 +68,7 @@ TSP::TSP(std::vector<TSP_Point> aPointList) : points(aPointList)
 }
 //---------------------------------------------------------------------------
 //Destructor
-TSP::~TSP()
+template <typename T> TSP<T>::~TSP()
 {
   for(int i = 0; i < n; i++){
     delete [] graph[i];
@@ -79,7 +78,7 @@ TSP::~TSP()
   delete [] adjlist;
 }
 //---------------------------------------------------------------------------
-void TSP::Solve()
+template <typename T> void TSP<T>::Solve()
 {
   fillMatrix();
   findMST();
@@ -87,10 +86,10 @@ void TSP::Solve()
   perfectMatching();
 
   // Loop through each index and find shortest path
-  TSP_NUM_TYPE best = std::numeric_limits<TSP_NUM_TYPE>::max();
+  T best = std::numeric_limits<T>::max();
   int bestIndex;
   for (long t = 0; t < n; t++) {
-    TSP_NUM_TYPE result = findBestPath(t);
+    T result = findBestPath(t);
     if (result < best) {
       bestIndex = t;
       best = result;
@@ -102,29 +101,29 @@ void TSP::Solve()
   make_hamiltonian(circuit, pathLength);
 }
 //---------------------------------------------------------------------------
-std::vector<int> TSP::getResult()
+template <typename T> std::vector<int> TSP<T>::getResult()
 {
   return circuit;
 }
 //---------------------------------------------------------------------------
-TSP_NUM_TYPE TSP::get_distance(struct TSP_Point c1, struct TSP_Point c2)
+//Special care for integers
+template <> int TSP<int>::get_distance(struct TSP_Point c1, struct TSP_Point c2)
 {
-#if NUM_TYPE==1
   double dx = std::pow((double) (c1.x - c2.x), 2);
   double dy = std::pow((double) (c1.y - c2.y), 2);
-#else
-  TSP_NUM_TYPE dx = std::pow(c1.x - c2.x, 2);
-  TSP_NUM_TYPE dy = std::pow(c1.y - c2.y, 2);
-#endif
 
-#if NUM_TYPE==1
   return std::floor( std::sqrt(dx + dy) + 0.5);
-#else
-  return std::sqrt(dx + dy);
-#endif
 }
 //---------------------------------------------------------------------------
-void TSP::fillMatrix()
+template <typename T> T TSP<T>::get_distance(struct TSP_Point c1, struct TSP_Point c2)
+{
+  T dx = std::pow(c1.x - c2.x, 2);
+  T dy = std::pow(c1.y - c2.y, 2);
+
+  return std::sqrt(dx + dy);
+}
+//---------------------------------------------------------------------------
+template <typename T> void TSP<T>::fillMatrix()
 {
   for(int i = 0; i < n; i++){
     for(int j = 0; j < n; j++){
@@ -136,16 +135,16 @@ void TSP::fillMatrix()
   This function uses Prim's algorithm to determine a minimum spanning tree on
     the graph
 ******************************************************************************/
-void TSP::findMST()
+template <typename T> void TSP<T>::findMST()
 {
-  TSP_NUM_TYPE* key = new TSP_NUM_TYPE[n];
+  T* key = new T[n];
   bool* included = new bool[n];
   int* parent = new int[n];
 
   for (int i = 0; i < n; i++) {
 
     // set each key to infinity
-    key[i] = std::numeric_limits<TSP_NUM_TYPE>::max();
+    key[i] = std::numeric_limits<T>::max();
 
     // node node yet included in MST
     included[i] = false;
@@ -199,10 +198,10 @@ void TSP::findMST()
 /******************************************************************************
   find the index of the closest unexamined node
 ******************************************************************************/
-int TSP::getMinIndex(TSP_NUM_TYPE key[], bool mst[])
+template <typename T> int TSP<T>::getMinIndex(T key[], bool mst[])
 {
   // initialize min and min_index
-  TSP_NUM_TYPE min = std::numeric_limits<TSP_NUM_TYPE>::max();
+  T min = std::numeric_limits<T>::max();
   int min_index;
 
   // iterate through each vertex
@@ -221,7 +220,7 @@ int TSP::getMinIndex(TSP_NUM_TYPE key[], bool mst[])
 /******************************************************************************
   find all vertices of odd degree in the MST. Store them in an subgraph O
 ******************************************************************************/
-void TSP::findOdds()
+template <typename T> void TSP<T>::findOdds()
 {
   for (int i = 0; i < n; i++) {
 
@@ -234,13 +233,13 @@ void TSP::findOdds()
   }
 }
 //---------------------------------------------------------------------------
-void TSP::perfectMatching()
+template <typename T> void TSP<T>::perfectMatching()
 {
   /************************************************************************************
    find a perfect matching M in the subgraph O using greedy algorithm but not minimum
   *************************************************************************************/
   int closest;
-  TSP_NUM_TYPE length; //int d;
+  T length; //int d;
   std::vector<int>::iterator tmp, first;
 
   // Find nodes with odd degrees in T to get subgraph O
@@ -268,7 +267,7 @@ void TSP::perfectMatching()
 }
 //---------------------------------------------------------------------------
 //find an euler circuit
-void TSP::euler_tour(int start, std::vector<int> &path)
+template <typename T> void TSP<T>::euler_tour(int start, std::vector<int> &path)
 {
   //Create copy of adj. list
   std::vector< std::vector<int> > tempList;
@@ -310,7 +309,7 @@ void TSP::euler_tour(int start, std::vector<int> &path)
 }
 //---------------------------------------------------------------------------
 //Make euler tour Hamiltonian
-void TSP::make_hamiltonian(std::vector<int> &path, TSP_NUM_TYPE &pathCost)
+template <typename T> void TSP<T>::make_hamiltonian(std::vector<int> &path, T &pathCost)
 {
   //remove visited nodes from Euler tour
   bool* visited = new bool[n];
@@ -345,25 +344,25 @@ void TSP::make_hamiltonian(std::vector<int> &path, TSP_NUM_TYPE &pathCost)
   pathCost += graph[*cur][*iter];
 }
 //---------------------------------------------------------------------------
-TSP_NUM_TYPE TSP::findBestPath(int start)
+template <typename T> T TSP<T>::findBestPath(int start)
 {
   std::vector<int> path;
   euler_tour(start, path);
 
-  TSP_NUM_TYPE length;
+  T length;
   make_hamiltonian(path, length);
 
   return length;
 }
 //---------------------------------------------------------------------------
-void TSP::printResult()
+template <typename T> void TSP<T>::printResult()
 {
   for (std::vector<int>::iterator it = circuit.begin(); it != circuit.end(); ++it) {
     std::cout << *it << std::endl;
   }
 }
 //---------------------------------------------------------------------------
-void TSP::printPath()
+template <typename T> void TSP<T>::printPath()
 {
   std::cout << std::endl;
   for (std::vector<int>::iterator it = circuit.begin(); it != circuit.end()-1; ++it) {
@@ -374,7 +373,7 @@ void TSP::printPath()
   std::cout << "\nLength: " << pathLength << std::endl << std::endl;
 }
 //---------------------------------------------------------------------------
-void TSP::printAdjList()
+template <typename T> void TSP<T>::printAdjList()
 {
   for (int i = 0; i < n; i++) {
     std::cout << i << ": "; //print which vertex's edge list follows
