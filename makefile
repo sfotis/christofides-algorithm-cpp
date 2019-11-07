@@ -4,7 +4,7 @@ cflags=-c -std=c++11
 all: driver
 
 driver: tsp.cpp tsp.h
-	g++ tsp.cpp -o tsp
+	g++ -DMAKE_TSP_EXE tsp.cpp -o tsp
 	
 clean:
 	rm -f a.out

@@ -7,12 +7,13 @@ Date: 08/16/17
 Modified & enhanced by Fotios Sioutis "sfotis@gmail.com"
 Date: 06/11/19
 *************************************************************************/
-#include "tspd.h"
+#include "tsp.h"
 //---------------------------------------------------------------------------
-#ifdef _DEBUG
+#ifdef MAKE_TSP_EXE
 int main(int argc, char *argv[]) {
   // Read file names from input
-  std::string input = "tsp_example_3.txt";
+  std::string input = "tsp_example_1.txt";
+  std::cout << std::endl << "S O L V I N G   :" << input << std::endl;
 
   std::ifstream inStream;
   inStream.open(input.c_str(), ios::in);
@@ -24,18 +25,19 @@ int main(int argc, char *argv[]) {
 
   //READ DATA
   int c;
-  TSPN_NUM_TYPE x, y;
-  std::vector<TSPN_Point> points;
+  TSP_NUM_TYPE x, y;
+  std::vector<TSP_Point> points;
 
   while(!inStream.eof()) {
     inStream >> c >> x >> y;
-    TSPN_Point newPoint = {x, y};
+    TSP_Point newPoint = {x, y};
     points.push_back(newPoint);
   }
   inStream.close();
 
+
   // Create new tsp object
-  TSPN tsp(points);
+  TSP tsp(points);
   tsp.Solve();
   std::cout << std::endl << "R E S U L T"  << std::endl;
   tsp.printResult();
@@ -51,13 +53,13 @@ int main(int argc, char *argv[]) {
 #endif
 //---------------------------------------------------------------------------
 //Constructor
-TSPN::TSPN(std::vector<TSPN_Point> aPointList) : points(aPointList)
+TSP::TSP(std::vector<TSP_Point> aPointList) : points(aPointList)
 {
   n = points.size();
 
-  graph = new TSPN_NUM_TYPE*[n];
+  graph = new TSP_NUM_TYPE*[n];
   for(int i = 0; i < n; i++){
-    graph[i] = new TSPN_NUM_TYPE[n];
+    graph[i] = new TSP_NUM_TYPE[n];
     for(int j = 0; j < n; j++){
       graph[i][j] = 0.;
     }
@@ -67,7 +69,7 @@ TSPN::TSPN(std::vector<TSPN_Point> aPointList) : points(aPointList)
 }
 //---------------------------------------------------------------------------
 //Destructor
-TSPN::~TSPN()
+TSP::~TSP()
 {
   for(int i = 0; i < n; i++){
     delete [] graph[i];
@@ -77,7 +79,7 @@ TSPN::~TSPN()
   delete [] adjlist;
 }
 //---------------------------------------------------------------------------
-void TSPN::Solve()
+void TSP::Solve()
 {
   fillMatrix();
   findMST();
@@ -85,10 +87,10 @@ void TSPN::Solve()
   perfectMatching();
 
   // Loop through each index and find shortest path
-  TSPN_NUM_TYPE best = std::numeric_limits<TSPN_NUM_TYPE>::max();
+  TSP_NUM_TYPE best = std::numeric_limits<TSP_NUM_TYPE>::max();
   int bestIndex;
   for (long t = 0; t < n; t++) {
-    TSPN_NUM_TYPE result = findBestPath(t);
+    TSP_NUM_TYPE result = findBestPath(t);
     if (result < best) {
       bestIndex = t;
       best = result;
@@ -100,19 +102,19 @@ void TSPN::Solve()
   make_hamiltonian(circuit, pathLength);
 }
 //---------------------------------------------------------------------------
-std::vector<int> TSPN::getResult()
+std::vector<int> TSP::getResult()
 {
   return circuit;
 }
 //---------------------------------------------------------------------------
-TSPN_NUM_TYPE TSPN::get_distance(struct TSPN_Point c1, struct TSPN_Point c2)
+TSP_NUM_TYPE TSP::get_distance(struct TSP_Point c1, struct TSP_Point c2)
 {
 #if NUM_TYPE==1
   double dx = std::pow((double) (c1.x - c2.x), 2);
   double dy = std::pow((double) (c1.y - c2.y), 2);
 #else
-  TSPN_NUM_TYPE dx = std::pow(c1.x - c2.x, 2);
-  TSPN_NUM_TYPE dy = std::pow(c1.y - c2.y, 2);
+  TSP_NUM_TYPE dx = std::pow(c1.x - c2.x, 2);
+  TSP_NUM_TYPE dy = std::pow(c1.y - c2.y, 2);
 #endif
 
 #if NUM_TYPE==1
@@ -122,7 +124,7 @@ TSPN_NUM_TYPE TSPN::get_distance(struct TSPN_Point c1, struct TSPN_Point c2)
 #endif
 }
 //---------------------------------------------------------------------------
-void TSPN::fillMatrix()
+void TSP::fillMatrix()
 {
   for(int i = 0; i < n; i++){
     for(int j = 0; j < n; j++){
@@ -134,16 +136,16 @@ void TSPN::fillMatrix()
   This function uses Prim's algorithm to determine a minimum spanning tree on
     the graph
 ******************************************************************************/
-void TSPN::findMST()
+void TSP::findMST()
 {
-  TSPN_NUM_TYPE* key = new TSPN_NUM_TYPE[n];
+  TSP_NUM_TYPE* key = new TSP_NUM_TYPE[n];
   bool* included = new bool[n];
   int* parent = new int[n];
 
   for (int i = 0; i < n; i++) {
 
     // set each key to infinity
-    key[i] = std::numeric_limits<TSPN_NUM_TYPE>::max();
+    key[i] = std::numeric_limits<TSP_NUM_TYPE>::max();
 
     // node node yet included in MST
     included[i] = false;
@@ -197,10 +199,10 @@ void TSPN::findMST()
 /******************************************************************************
   find the index of the closest unexamined node
 ******************************************************************************/
-int TSPN::getMinIndex(TSPN_NUM_TYPE key[], bool mst[])
+int TSP::getMinIndex(TSP_NUM_TYPE key[], bool mst[])
 {
   // initialize min and min_index
-  TSPN_NUM_TYPE min = std::numeric_limits<TSPN_NUM_TYPE>::max();
+  TSP_NUM_TYPE min = std::numeric_limits<TSP_NUM_TYPE>::max();
   int min_index;
 
   // iterate through each vertex
@@ -219,7 +221,7 @@ int TSPN::getMinIndex(TSPN_NUM_TYPE key[], bool mst[])
 /******************************************************************************
   find all vertices of odd degree in the MST. Store them in an subgraph O
 ******************************************************************************/
-void TSPN::findOdds()
+void TSP::findOdds()
 {
   for (int i = 0; i < n; i++) {
 
@@ -232,13 +234,13 @@ void TSPN::findOdds()
   }
 }
 //---------------------------------------------------------------------------
-void TSPN::perfectMatching()
+void TSP::perfectMatching()
 {
   /************************************************************************************
    find a perfect matching M in the subgraph O using greedy algorithm but not minimum
   *************************************************************************************/
   int closest;
-  TSPN_NUM_TYPE length; //int d;
+  TSP_NUM_TYPE length; //int d;
   std::vector<int>::iterator tmp, first;
 
   // Find nodes with odd degrees in T to get subgraph O
@@ -266,7 +268,7 @@ void TSPN::perfectMatching()
 }
 //---------------------------------------------------------------------------
 //find an euler circuit
-void TSPN::euler_tour(int start, std::vector<int> &path)
+void TSP::euler_tour(int start, std::vector<int> &path)
 {
   //Create copy of adj. list
   std::vector< std::vector<int> > tempList;
@@ -308,7 +310,7 @@ void TSPN::euler_tour(int start, std::vector<int> &path)
 }
 //---------------------------------------------------------------------------
 //Make euler tour Hamiltonian
-void TSPN::make_hamiltonian(std::vector<int> &path, TSPN_NUM_TYPE &pathCost)
+void TSP::make_hamiltonian(std::vector<int> &path, TSP_NUM_TYPE &pathCost)
 {
   //remove visited nodes from Euler tour
   bool* visited = new bool[n];
@@ -343,25 +345,25 @@ void TSPN::make_hamiltonian(std::vector<int> &path, TSPN_NUM_TYPE &pathCost)
   pathCost += graph[*cur][*iter];
 }
 //---------------------------------------------------------------------------
-TSPN_NUM_TYPE TSPN::findBestPath(int start)
+TSP_NUM_TYPE TSP::findBestPath(int start)
 {
   std::vector<int> path;
   euler_tour(start, path);
 
-  TSPN_NUM_TYPE length;
+  TSP_NUM_TYPE length;
   make_hamiltonian(path, length);
 
   return length;
 }
 //---------------------------------------------------------------------------
-void TSPN::printResult()
+void TSP::printResult()
 {
   for (std::vector<int>::iterator it = circuit.begin(); it != circuit.end(); ++it) {
     std::cout << *it << std::endl;
   }
 }
 //---------------------------------------------------------------------------
-void TSPN::printPath()
+void TSP::printPath()
 {
   std::cout << std::endl;
   for (std::vector<int>::iterator it = circuit.begin(); it != circuit.end()-1; ++it) {
@@ -372,7 +374,7 @@ void TSPN::printPath()
   std::cout << "\nLength: " << pathLength << std::endl << std::endl;
 }
 //---------------------------------------------------------------------------
-void TSPN::printAdjList()
+void TSP::printAdjList()
 {
   for (int i = 0; i < n; i++) {
     std::cout << i << ": "; //print which vertex's edge list follows
