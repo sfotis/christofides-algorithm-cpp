@@ -1,3 +1,13 @@
+With modifications including : 
+
+Memory leak fixes.
+Multiple type coordinates supported (int, float, double, long double).
+Unused memory allocations removed.
+Unused variables removed.
+Compile time allocations removed. 
+Cleaned up class to be easily used as a library object for other programs. 
+Added sample C function for main program entry point.
+
 # cs325projectG24C
 
 Title: CS325 Final Project Group 24  
