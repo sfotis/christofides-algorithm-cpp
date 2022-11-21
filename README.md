@@ -1,5 +1,6 @@
 With modifications including : 
 
+3D points support.
 Memory leak fixes.
 Multiple type coordinates supported (int, float, double, long double).
 Unused memory allocations removed.
